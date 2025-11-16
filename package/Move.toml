@@ -1,0 +1,10 @@
+[package]
+name = "piggy_bank"
+edition = "2024.beta"
+version = "1.1"
+
+[dependencies]
+openplay_core= { git = "git@github.com:OpenPlay-Technologies/openplay-core.git", subdir = "package", rev = "v1.1" }
+
+[addresses]
+piggy_bank = "0x0"
