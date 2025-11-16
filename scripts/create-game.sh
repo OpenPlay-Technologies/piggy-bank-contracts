@@ -89,7 +89,7 @@ show_parameter_sets() {
     echo ""
     print_status "Available Piggy Bank Parameter Sets:"
     echo ""
-    for set_num in 1 2 3; do
+    for set_num in 1 2 3 4 5; do
         get_parameter_set "$set_num" >/dev/null 2>&1
 
         local min_stake_sui max_stake_sui success_rate_percent
@@ -118,28 +118,50 @@ show_parameter_sets() {
 # Function to get parameter set
 get_parameter_set() {
     local set_num="$1"
+    local is_short="false"
+    local base_set_num="$set_num"
 
-    case $set_num in
+    # Detect if _SHORT is present
+    if [[ "$set_num" =~ _SHORT$ ]]; then
+        is_short="true"
+        base_set_num="${set_num%_SHORT}"
+    fi
+
+    case $base_set_num in
         1)
-            MIN_STAKE=10000000
+            MIN_STAKE=100000000
             MAX_STAKE=1000000000
             SUCCESS_RATE_BPS=9000
-            STEPS_PAYOUT_BPS="[10740, 11535, 12388, 13305, 14290, 15347, 16483, 17702, 19012, 20419, 21930, 23553, 25296, 27168, 29179, 31338, 33657, 36147, 38822, 41695, 44781, 48094, 51653, 55476, 59581, 63990, 68725, 73811, 79273, 85139, 91439, 98206, 105473, 113278, 121661, 130663, 140333, 150717, 161870, 173849, 186713, 200530, 215369]"
+            STEPS_PAYOUT_BPS="[10670, 11385, 12148, 12962, 13830, 14757, 15745, 16800, 17926, 19127, 20408, 21776, 23235, 24791, 26452, 28225, 30116, 32134, 34287, 36584, 39035, 41650, 44441, 47418, 50595, 53985, 57602, 61462, 65580, 69973, 74662, 79664, 85001, 90696, 96773, 103257, 110175, 117557, 125433, 133837, 142804]"
             GAME_TYPE="EASY"
             ;;
         2)
-            MIN_STAKE=10000000
+            MIN_STAKE=100000000
             MAX_STAKE=1000000000
             SUCCESS_RATE_BPS=8000
-            STEPS_PAYOUT_BPS="[12070, 14568, 17584, 21224, 25617, 30920, 37321, 45046, 54371, 65626, 79210, 95606, 115397, 139284, 168116, 202916, 244920, 295618, 356811, 430671, 519820, 627422, 757299, 914060, 1103270]"
+            STEPS_PAYOUT_BPS="[12000, 14400, 17280, 20736, 24883, 29860, 35832, 42998, 51598, 61917, 74301, 89161, 106993, 128392, 154070, 184884, 221861, 266233, 319480, 383376, 460051, 552061, 662474, 794968, 953962, 1144755, 1373706, 1648447, 1978136, 2373763, 2848516, 3418219, 4101863, 4922235, 5906682, 7088019, 8505622, 10206747]"
             GAME_TYPE="MEDIUM"
             ;;
         3)
-            MIN_STAKE=10000000
+            MIN_STAKE=100000000
             MAX_STAKE=1000000000
             SUCCESS_RATE_BPS=7000
-            STEPS_PAYOUT_BPS="[13800, 19044, 26281, 36267, 50049, 69068, 95313, 131532, 181515, 250490, 345677, 477034, 658306, 908463, 1253679]"
+            STEPS_PAYOUT_BPS="[13700, 18769, 25714, 35228, 48262, 66119, 90582, 124098, 170014, 232919, 319100, 437166, 598918, 820518, 1124109, 1540030, 2109841, 2890482, 3959960, 5425145, 7432449, 10182454]"
             GAME_TYPE="HARD"
+            ;;
+        4)
+            MIN_STAKE=100000000
+            MAX_STAKE=1000000000
+            SUCCESS_RATE_BPS=6000
+            STEPS_PAYOUT_BPS="[16000, 25600, 40960, 65536, 104858, 167772, 268435, 429497, 687195, 1099512, 1759219, 2814750, 4503600, 7205759, 11529215]"
+            GAME_TYPE="EXTREME"
+            ;;
+        5)
+            MIN_STAKE=100000000
+            MAX_STAKE=1000000000
+            SUCCESS_RATE_BPS=5000
+            STEPS_PAYOUT_BPS="[19200, 36864, 70779, 135895, 260919, 500965, 961853, 1846757, 3545774, 6807886, 13071141]"
+            GAME_TYPE="DEGEN"
             ;;
         *)
             print_error "Invalid parameter set: $set_num"
@@ -147,6 +169,15 @@ get_parameter_set() {
             exit 1
             ;;
     esac
+
+    if [ "$is_short" = "true" ]; then
+        # Filter STEPS_PAYOUT_BPS to only values < 100000
+        local filtered_bps
+        filtered_bps=$(echo "$STEPS_PAYOUT_BPS" | sed 's/[][]//g' | tr ',' '\n' | awk '{gsub(/ /,""); if ($1 < 100000) print $1}' | paste -sd, -)
+        STEPS_PAYOUT_BPS="[$filtered_bps]"
+        MIN_STAKE=10000000  # 0.01 SUI
+        GAME_TYPE="${GAME_TYPE}_SHORT"
+    fi
 }
 
 # Function to load core environment variables from openplay-core repo
@@ -301,6 +332,7 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+
 # Parse arguments
 PARAM_SET=""
 for arg in "$@"; do
@@ -323,7 +355,7 @@ if [ -z "$PARAM_SET" ]; then
     exit 1
 fi
 
-# Get parameter set
+# Get parameter set (supports _SHORT)
 get_parameter_set "$PARAM_SET"
 
 print_status "Creating piggy bank game with parameter set $PARAM_SET ($GAME_TYPE)"
