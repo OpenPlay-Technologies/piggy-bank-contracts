@@ -51,8 +51,8 @@ show_usage() {
 }
 
 # Check if we're in the right directory
-if [ ! -f "packages/openplay_piggy_bank/Move.toml" ]; then
-    print_error "This script must be run from the openplay-framework root directory"
+if [ ! -f "package/Move.toml" ]; then
+    print_error "This script must be run from the piggy-bank-contracts root directory"
     exit 1
 fi
 
@@ -113,7 +113,7 @@ if [ -f "outputs/$ACTIVE_ENV/latest_piggy_bank.env" ]; then
     source "outputs/$ACTIVE_ENV/latest_piggy_bank.env"
     print_success "Loaded piggy bank package environment variables"
 else
-    print_error "Piggy bank package not deployed. Run ./scripts/deploy-piggy-bank.sh first."
+    print_error "Piggy bank package not deployed. Run ./scripts/deploy-package.sh first."
     exit 1
 fi
 

@@ -47,6 +47,9 @@ save_version_history() {
     local output_dir="outputs/$env"
     local versions_file="$output_dir/openplay_piggy_bank_versions.txt"
     
+    # Create output directory if it doesn't exist
+    mkdir -p "$output_dir"
+    
     # Create versions file if it doesn't exist
     if [ ! -f "$versions_file" ]; then
         > "$versions_file"
@@ -131,8 +134,8 @@ save_env_vars() {
 }
 
 # Check if we're in the right directory
-if [ ! -f "packages/openplay_piggy_bank/Move.toml" ]; then
-    print_error "This script must be run from the openplay-framework root directory"
+if [ ! -f "package/Move.toml" ]; then
+    print_error "This script must be run from the piggy-bank-contracts root directory"
     exit 1
 fi
 
@@ -181,7 +184,7 @@ fi
 print_status "Deploying OpenPlay Piggy Bank package..."
 
 # Change to the piggy bank package directory
-cd packages/openplay_piggy_bank
+cd package
 
 # Deploy the package and capture the JSON output
 print_status "Publishing package..."
@@ -239,7 +242,7 @@ export OPENPLAY_PIGGY_BANK_CAP
 export OPENPLAY_PIGGY_BANK_UPGRADE_CAP
 
 # Return to root directory
-cd ../..
+cd ..
 
 # Save version history
 save_version_history "$ACTIVE_ENV" "$OPENPLAY_PIGGY_BANK_VERSION" "$NEW_PACKAGE_ID"
