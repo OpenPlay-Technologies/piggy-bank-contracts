@@ -118,19 +118,18 @@ else
 fi
 
 # Validate that we have the required variables
-if [ -z "$CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID" ] || [ "$CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID" = "null" ]; then
+if [ -z "$CURRENT_PIGGY_BANK_PACKAGE_ID" ] || [ "$CURRENT_PIGGY_BANK_PACKAGE_ID" = "null" ]; then
     print_error "Piggy bank package ID not found. Cannot proceed."
     exit 1
 fi
 
-if [ -z "$OPENPLAY_PIGGY_BANK_CAP" ] || [ "$OPENPLAY_PIGGY_BANK_CAP" = "null" ]; then
+if [ -z "$PIGGY_BANK_CAP" ] || [ "$PIGGY_BANK_CAP" = "null" ]; then
     print_error "Piggy bank cap not found. Cannot proceed."
     exit 1
 fi
 
 # Set package variables for convenience
-PIGGY_BANK_PACKAGE_ID="$CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID"
-PIGGY_BANK_CAP="$OPENPLAY_PIGGY_BANK_CAP"
+PIGGY_BANK_PACKAGE_ID="$CURRENT_PIGGY_BANK_PACKAGE_ID"
 
 print_status "Using Piggy Bank Package: $PIGGY_BANK_PACKAGE_ID"
 print_status "Using Piggy Bank Cap: $PIGGY_BANK_CAP"

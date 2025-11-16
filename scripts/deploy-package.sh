@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Deploy OpenPlay Piggy Bank Package
-# This script deploys the openplay_piggy_bank package and extracts important IDs to environment variables
+# Deploy Piggy Bank Package
+# This script deploys the piggy_bank package and extracts important IDs to environment variables
 
 set -e  # Exit on any error
 
@@ -45,7 +45,7 @@ save_version_history() {
     local version="$2"
     local package_id="$3"
     local output_dir="outputs/$env"
-    local versions_file="$output_dir/openplay_piggy_bank_versions.txt"
+    local versions_file="$output_dir/versions.txt"
     
     # Create output directory if it doesn't exist
     mkdir -p "$output_dir"
@@ -64,7 +64,7 @@ save_version_history() {
 get_next_version() {
     local env="$1"
     local output_dir="outputs/$env"
-    local versions_file="$output_dir/openplay_piggy_bank_versions.txt"
+    local versions_file="$output_dir/versions.txt"
     
     if [ ! -f "$versions_file" ]; then
         echo "1"
@@ -85,7 +85,7 @@ save_deployment_output() {
     local timestamp="$2"
     local version="$3"
     local output_dir="outputs/$env"
-    local base_filename="openplay_piggy_bank_${timestamp}"
+    local base_filename="piggy_bank_${timestamp}"
     
     # Create environment-specific directory if it doesn't exist
     mkdir -p "$output_dir"
@@ -93,11 +93,11 @@ save_deployment_output() {
     # Save environment variables
     local env_file="$output_dir/${base_filename}.env"
     save_env_vars "$env_file" \
-        "CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID" \
-        "ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID" \
-        "OPENPLAY_PIGGY_BANK_CAP" \
-        "OPENPLAY_PIGGY_BANK_UPGRADE_CAP" \
-        "OPENPLAY_PIGGY_BANK_VERSION"
+        "CURRENT_PIGGY_BANK_PACKAGE_ID" \
+        "ORIGINAL_PIGGY_BANK_PACKAGE_ID" \
+        "PIGGY_BANK_CAP" \
+        "PIGGY_BANK_UPGRADE_CAP" \
+        "PIGGY_BANK_VERSION"
     
     # Create latest symlink for easy access
     local latest_env="$output_dir/latest_piggy_bank.env"
@@ -168,12 +168,12 @@ if [ "$1" = "--restore" ]; then
         
         # Print current state
         echo ""
-        print_status "Current OpenPlay Piggy Bank State:"
-        echo "  CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID: ${CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID:-'Not set'}"
-        echo "  ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID: ${ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID:-'Not set'}"
-        echo "  OPENPLAY_PIGGY_BANK_VERSION: ${OPENPLAY_PIGGY_BANK_VERSION:-'Not set'}"
-        echo "  OPENPLAY_PIGGY_BANK_CAP: ${OPENPLAY_PIGGY_BANK_CAP:-'Not set'}"
-        echo "  OPENPLAY_PIGGY_BANK_UPGRADE_CAP: ${OPENPLAY_PIGGY_BANK_UPGRADE_CAP:-'Not set'}"
+        print_status "Current Piggy Bank State:"
+        echo "  CURRENT_PIGGY_BANK_PACKAGE_ID: ${CURRENT_PIGGY_BANK_PACKAGE_ID:-'Not set'}"
+        echo "  ORIGINAL_PIGGY_BANK_PACKAGE_ID: ${ORIGINAL_PIGGY_BANK_PACKAGE_ID:-'Not set'}"
+        echo "  PIGGY_BANK_VERSION: ${PIGGY_BANK_VERSION:-'Not set'}"
+        echo "  PIGGY_BANK_CAP: ${PIGGY_BANK_CAP:-'Not set'}"
+        echo "  PIGGY_BANK_UPGRADE_CAP: ${PIGGY_BANK_UPGRADE_CAP:-'Not set'}"
     else
         print_error "No state file found. Run deployment first."
         exit 1
@@ -181,7 +181,7 @@ if [ "$1" = "--restore" ]; then
     exit 0
 fi
 
-print_status "Deploying OpenPlay Piggy Bank package..."
+print_status "Deploying Piggy Bank package..."
 
 # Change to the piggy bank package directory
 cd package
@@ -206,10 +206,10 @@ print_status "Extracting package information..."
 NEW_PACKAGE_ID=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.objectChanges[] | select(.type == "published") | .packageId')
 
 # Extract cap (owned by the sender)
-OPENPLAY_PIGGY_BANK_CAP=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.objectChanges[] | select(.objectType != null and (.objectType | contains("::game::PiggyBankCap"))) | .objectId')
+PIGGY_BANK_CAP=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.objectChanges[] | select(.objectType != null and (.objectType | contains("::game::PiggyBankCap"))) | .objectId')
 
 # Extract upgrade cap (owned by the sender)
-OPENPLAY_PIGGY_BANK_UPGRADE_CAP=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.objectChanges[] | select(.objectType != null and (.objectType | contains("::package::UpgradeCap"))) | .objectId')
+PIGGY_BANK_UPGRADE_CAP=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.objectChanges[] | select(.objectType != null and (.objectType | contains("::package::UpgradeCap"))) | .objectId')
 
 # Validate extracted values
 if [ -z "$NEW_PACKAGE_ID" ] || [ "$NEW_PACKAGE_ID" = "null" ]; then
@@ -217,48 +217,48 @@ if [ -z "$NEW_PACKAGE_ID" ] || [ "$NEW_PACKAGE_ID" = "null" ]; then
     exit 1
 fi
 
-if [ -z "$OPENPLAY_PIGGY_BANK_CAP" ] || [ "$OPENPLAY_PIGGY_BANK_CAP" = "null" ]; then
+if [ -z "$PIGGY_BANK_CAP" ] || [ "$PIGGY_BANK_CAP" = "null" ]; then
     print_error "Failed to extract cap ID"
     exit 1
 fi
 
-if [ -z "$OPENPLAY_PIGGY_BANK_UPGRADE_CAP" ] || [ "$OPENPLAY_PIGGY_BANK_UPGRADE_CAP" = "null" ]; then
+if [ -z "$PIGGY_BANK_UPGRADE_CAP" ] || [ "$PIGGY_BANK_UPGRADE_CAP" = "null" ]; then
     print_error "Failed to extract upgrade cap ID"
     exit 1
 fi
 
 # Get version number (this is a new deployment, so version 1)
-OPENPLAY_PIGGY_BANK_VERSION=1
+PIGGY_BANK_VERSION=1
 
 # For initial deployment, both CURRENT and ORIGINAL are the same
-CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID="$NEW_PACKAGE_ID"
-ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID="$NEW_PACKAGE_ID"
+CURRENT_PIGGY_BANK_PACKAGE_ID="$NEW_PACKAGE_ID"
+ORIGINAL_PIGGY_BANK_PACKAGE_ID="$NEW_PACKAGE_ID"
 
 # Export variables for current session
-export CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID
-export ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID
-export OPENPLAY_PIGGY_BANK_VERSION
-export OPENPLAY_PIGGY_BANK_CAP
-export OPENPLAY_PIGGY_BANK_UPGRADE_CAP
+export CURRENT_PIGGY_BANK_PACKAGE_ID
+export ORIGINAL_PIGGY_BANK_PACKAGE_ID
+export PIGGY_BANK_VERSION
+export PIGGY_BANK_CAP
+export PIGGY_BANK_UPGRADE_CAP
 
 # Return to root directory
 cd ..
 
 # Save version history
-save_version_history "$ACTIVE_ENV" "$OPENPLAY_PIGGY_BANK_VERSION" "$NEW_PACKAGE_ID"
+save_version_history "$ACTIVE_ENV" "$PIGGY_BANK_VERSION" "$NEW_PACKAGE_ID"
 
 # Save all deployment outputs to files
-save_deployment_output "$ACTIVE_ENV" "$TIMESTAMP" "$OPENPLAY_PIGGY_BANK_VERSION"
+save_deployment_output "$ACTIVE_ENV" "$TIMESTAMP" "$PIGGY_BANK_VERSION"
 
 # Print summary
 echo ""
-print_success "OpenPlay Piggy Bank deployment completed successfully!"
+print_success "Piggy Bank deployment completed successfully!"
 echo ""
 print_status "Deployment Summary:"
-echo "  Version: $OPENPLAY_PIGGY_BANK_VERSION"
-echo "  Current Package ID: $CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID"
-echo "  Original Package ID: $ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID"
-echo "  Cap: $OPENPLAY_PIGGY_BANK_CAP"
-echo "  Upgrade Cap: $OPENPLAY_PIGGY_BANK_UPGRADE_CAP"
+echo "  Version: $PIGGY_BANK_VERSION"
+echo "  Current Package ID: $CURRENT_PIGGY_BANK_PACKAGE_ID"
+echo "  Original Package ID: $ORIGINAL_PIGGY_BANK_PACKAGE_ID"
+echo "  Cap: $PIGGY_BANK_CAP"
+echo "  Upgrade Cap: $PIGGY_BANK_UPGRADE_CAP"
 echo ""
 print_status "Environment variables are now available in your current shell session."

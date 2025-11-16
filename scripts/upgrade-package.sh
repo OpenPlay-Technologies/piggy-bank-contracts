@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Upgrade OpenPlay Piggy Bank Package
-# This script upgrades the openplay_piggy_bank package using the original upgrade capability
+# Upgrade Piggy Bank Package
+# This script upgrades the piggy_bank package using the original upgrade capability
 
 set -e  # Exit on any error
 
@@ -45,7 +45,7 @@ save_version_history() {
     local version="$2"
     local package_id="$3"
     local output_dir="outputs/$env"
-    local versions_file="$output_dir/openplay_piggy_bank_versions.txt"
+    local versions_file="$output_dir/versions.txt"
     
     # Create output directory if it doesn't exist
     mkdir -p "$output_dir"
@@ -64,7 +64,7 @@ save_version_history() {
 get_next_version() {
     local env="$1"
     local output_dir="outputs/$env"
-    local versions_file="$output_dir/openplay_piggy_bank_versions.txt"
+    local versions_file="$output_dir/versions.txt"
     
     if [ ! -f "$versions_file" ]; then
         echo "1"
@@ -85,7 +85,7 @@ save_upgrade_output() {
     local timestamp="$2"
     local version="$3"
     local output_dir="outputs/$env"
-    local base_filename="openplay_piggy_bank_${timestamp}"
+    local base_filename="piggy_bank_${timestamp}"
     
     # Create environment-specific directory if it doesn't exist
     mkdir -p "$output_dir"
@@ -93,11 +93,11 @@ save_upgrade_output() {
     # Save environment variables
     local env_file="$output_dir/${base_filename}.env"
     save_env_vars "$env_file" \
-        "CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID" \
-        "ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID" \
-        "OPENPLAY_PIGGY_BANK_CAP" \
-        "OPENPLAY_PIGGY_BANK_UPGRADE_CAP" \
-        "OPENPLAY_PIGGY_BANK_VERSION"
+        "CURRENT_PIGGY_BANK_PACKAGE_ID" \
+        "ORIGINAL_PIGGY_BANK_PACKAGE_ID" \
+        "PIGGY_BANK_CAP" \
+        "PIGGY_BANK_UPGRADE_CAP" \
+        "PIGGY_BANK_VERSION"
     
     # Create latest symlink for easy access
     local latest_env="$output_dir/latest_piggy_bank.env"
@@ -167,27 +167,27 @@ else
 fi
 
 # Validate that we have the required variables
-if [ -z "$OPENPLAY_PIGGY_BANK_UPGRADE_CAP" ] || [ "$OPENPLAY_PIGGY_BANK_UPGRADE_CAP" = "null" ]; then
+if [ -z "$PIGGY_BANK_UPGRADE_CAP" ] || [ "$PIGGY_BANK_UPGRADE_CAP" = "null" ]; then
     print_error "Upgrade capability not found. Cannot proceed with upgrade."
     exit 1
 fi
 
-if [ -z "$ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID" ] || [ "$ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID" = "null" ]; then
+if [ -z "$ORIGINAL_PIGGY_BANK_PACKAGE_ID" ] || [ "$ORIGINAL_PIGGY_BANK_PACKAGE_ID" = "null" ]; then
     print_error "Original package ID not found. Cannot proceed with upgrade."
     exit 1
 fi
 
 # Preserve original values (ORIGINAL_* stays the same, but we need to track previous CURRENT for display)
-ORIGINAL_UPGRADE_CAP="$OPENPLAY_PIGGY_BANK_UPGRADE_CAP"
-ORIGINAL_PACKAGE_ID="$ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID"
-PREVIOUS_PACKAGE_ID="${CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID:-$ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID}"
-ORIGINAL_CAP="$OPENPLAY_PIGGY_BANK_CAP"
+ORIGINAL_UPGRADE_CAP="$PIGGY_BANK_UPGRADE_CAP"
+ORIGINAL_PACKAGE_ID="$ORIGINAL_PIGGY_BANK_PACKAGE_ID"
+PREVIOUS_PACKAGE_ID="${CURRENT_PIGGY_BANK_PACKAGE_ID:-$ORIGINAL_PIGGY_BANK_PACKAGE_ID}"
+ORIGINAL_CAP="$PIGGY_BANK_CAP"
 
 # Get next version number
 NEXT_VERSION=$(get_next_version "$ACTIVE_ENV")
 print_status "Upgrading to version $NEXT_VERSION"
 
-print_status "Upgrading OpenPlay Piggy Bank package..."
+print_status "Upgrading Piggy Bank package..."
 print_status "Using upgrade capability: $ORIGINAL_UPGRADE_CAP"
 
 # Change to the piggy bank package directory
@@ -219,40 +219,40 @@ if [ -z "$NEW_PACKAGE_ID" ] || [ "$NEW_PACKAGE_ID" = "null" ]; then
 fi
 
 # Update version variables
-OPENPLAY_PIGGY_BANK_VERSION="$NEXT_VERSION"
-CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID="$NEW_PACKAGE_ID"
+PIGGY_BANK_VERSION="$NEXT_VERSION"
+CURRENT_PIGGY_BANK_PACKAGE_ID="$NEW_PACKAGE_ID"
 # Keep original values unchanged
-ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID="$ORIGINAL_PACKAGE_ID"
-OPENPLAY_PIGGY_BANK_CAP="$ORIGINAL_CAP"
-OPENPLAY_PIGGY_BANK_UPGRADE_CAP="$ORIGINAL_UPGRADE_CAP"
+ORIGINAL_PIGGY_BANK_PACKAGE_ID="$ORIGINAL_PACKAGE_ID"
+PIGGY_BANK_CAP="$ORIGINAL_CAP"
+PIGGY_BANK_UPGRADE_CAP="$ORIGINAL_UPGRADE_CAP"
 
 # Export variables for current session
-export CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID
-export ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID
-export OPENPLAY_PIGGY_BANK_VERSION
-export OPENPLAY_PIGGY_BANK_CAP
-export OPENPLAY_PIGGY_BANK_UPGRADE_CAP
+export CURRENT_PIGGY_BANK_PACKAGE_ID
+export ORIGINAL_PIGGY_BANK_PACKAGE_ID
+export PIGGY_BANK_VERSION
+export PIGGY_BANK_CAP
+export PIGGY_BANK_UPGRADE_CAP
 
 # Return to root directory
 cd ..
 
 # Save version history
-save_version_history "$ACTIVE_ENV" "$OPENPLAY_PIGGY_BANK_VERSION" "$NEW_PACKAGE_ID"
+save_version_history "$ACTIVE_ENV" "$PIGGY_BANK_VERSION" "$NEW_PACKAGE_ID"
 
 # Save all upgrade outputs to files
-save_upgrade_output "$ACTIVE_ENV" "$TIMESTAMP" "$OPENPLAY_PIGGY_BANK_VERSION"
+save_upgrade_output "$ACTIVE_ENV" "$TIMESTAMP" "$PIGGY_BANK_VERSION"
 
 # Print summary
 echo ""
-print_success "OpenPlay Piggy Bank upgrade completed successfully!"
+print_success "Piggy Bank upgrade completed successfully!"
 echo ""
 print_status "Upgrade Summary:"
-echo "  Version: $OPENPLAY_PIGGY_BANK_VERSION"
+echo "  Version: $PIGGY_BANK_VERSION"
 echo "  Previous Package ID: $PREVIOUS_PACKAGE_ID"
-echo "  New Package ID: $CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID"
-echo "  Original Package ID: $ORIGINAL_OPENPLAY_PIGGY_BANK_PACKAGE_ID"
-echo "  Cap: $OPENPLAY_PIGGY_BANK_CAP"
-echo "  Upgrade Cap: $OPENPLAY_PIGGY_BANK_UPGRADE_CAP"
+echo "  New Package ID: $CURRENT_PIGGY_BANK_PACKAGE_ID"
+echo "  Original Package ID: $ORIGINAL_PIGGY_BANK_PACKAGE_ID"
+echo "  Cap: $PIGGY_BANK_CAP"
+echo "  Upgrade Cap: $PIGGY_BANK_UPGRADE_CAP"
 echo ""
 print_status "Environment variables are now available in your current shell session."
 

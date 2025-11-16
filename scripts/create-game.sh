@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Create OpenPlay Piggy Bank Game Instances
+# Create Piggy Bank Game Instances
 # This script creates piggy bank game instances with predefined parameter sets
 
 set -e  # Exit on any error
@@ -54,9 +54,9 @@ save_game_output() {
     # Save env file with game id, parameter store id, and game statistics id
     local env_file="$output_dir/${base_filename}.env"
     > "$env_file"
-    echo "export OPENPLAY_PIGGY_BANK_GAME_ID=\"$GAME_ID\"" >> "$env_file"
-    echo "export OPENPLAY_PIGGY_BANK_PARAM_STORE_ID=\"$PARAM_STORE_ID\"" >> "$env_file"
-    echo "export OPENPLAY_PIGGY_BANK_GAME_STATS_ID=\"$GAME_STATS_ID\"" >> "$env_file"
+    echo "export PIGGY_BANK_GAME_ID=\"$GAME_ID\"" >> "$env_file"
+    echo "export PIGGY_BANK_PARAM_STORE_ID=\"$PARAM_STORE_ID\"" >> "$env_file"
+    echo "export PIGGY_BANK_GAME_STATS_ID=\"$GAME_STATS_ID\"" >> "$env_file"
     print_success "Game environment saved to $env_file"
 }
 
@@ -278,15 +278,14 @@ else
 fi
 
 # Check if package variables are loaded
-if [ -z "$CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID" ] || [ -z "$OPENPLAY_PIGGY_BANK_CAP" ] || [ -z "$CURRENT_OPENPLAY_CORE_PACKAGE_ID" ] || [ -z "$OPENPLAY_CORE_REGISTRY_ID" ]; then
+if [ -z "$CURRENT_PIGGY_BANK_PACKAGE_ID" ] || [ -z "$PIGGY_BANK_CAP" ] || [ -z "$CURRENT_OPENPLAY_CORE_PACKAGE_ID" ] || [ -z "$OPENPLAY_CORE_REGISTRY_ID" ]; then
     print_error "Required package variables not loaded. Ensure both core and piggy bank packages are deployed."
     exit 1
 fi
 
 # Set package variables for convenience (use CURRENT_* to always use latest version)
 CORE_PACKAGE_ID="$CURRENT_OPENPLAY_CORE_PACKAGE_ID"
-PIGGY_BANK_PACKAGE_ID="$CURRENT_OPENPLAY_PIGGY_BANK_PACKAGE_ID"
-PIGGY_BANK_CAP="$OPENPLAY_PIGGY_BANK_CAP"
+PIGGY_BANK_PACKAGE_ID="$CURRENT_PIGGY_BANK_PACKAGE_ID"
 REGISTRY_ID="$OPENPLAY_CORE_REGISTRY_ID"
 
 # Initialize debug flag
