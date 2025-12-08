@@ -3,16 +3,11 @@ module piggy_bank::constants;
 use std::string::{String, utf8};
 
 // === Constants ===
-const CURRENT_VERSION: u64 = 1; // Update version during upgrades
 const MAX_STEPS: u8 = 50;
 const EMPTY_POSITION: u8 = 255;
 const MAX_PAYOUT_FACTOR_BPS: u64 = 100_000_000; // This is 10_000 times the stake or 1_000_000%
 
 // === Public-View Functions ===
-public fun current_version(): u64 {
-    CURRENT_VERSION
-}
-
 public fun empty_position(): u8 {
     EMPTY_POSITION
 }

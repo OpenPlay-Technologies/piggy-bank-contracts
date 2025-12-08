@@ -19,31 +19,31 @@ public fun success_win_flow() {
     assert!(context.current_position() == empty_position());
     assert!(context.get_win() == 0);
 
-    context.start_game(10);
+    context.start_game(100_000);
 
     assert!(context.status() == initialized_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == empty_position());
     assert!(context.get_win() == 0);
 
     context.advance_position();
 
     assert!(context.status() == game_ongoing_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == 0);
     assert!(context.get_win() == 0);
 
     context.advance_position();
 
     assert!(context.status() == game_ongoing_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == 1);
     assert!(context.get_win() == 0);
 
     context.process_win(100);
 
     assert!(context.status() == game_finished_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == 1);
     assert!(context.get_win() == 100);
 }
@@ -57,31 +57,31 @@ public fun success_lose_flow() {
     assert!(context.current_position() == empty_position());
     assert!(context.get_win() == 0);
 
-    context.start_game(10);
+    context.start_game(100_000);
 
     assert!(context.status() == initialized_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == empty_position());
     assert!(context.get_win() == 0);
 
     context.advance_position();
 
     assert!(context.status() == game_ongoing_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == 0);
     assert!(context.get_win() == 0);
 
     context.advance_position();
 
     assert!(context.status() == game_ongoing_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == 1);
     assert!(context.get_win() == 0);
 
     context.die();
 
     assert!(context.status() == game_finished_status());
-    assert!(context.stake() == 10);
+    assert!(context.stake() == 100_000);
     assert!(context.current_position() == 1);
     assert!(context.get_win() == 0);
 }
@@ -97,7 +97,7 @@ public fun fail_advance_without_start() {
 #[test, expected_failure(abort_code = context::EInvalidStateTransition)]
 public fun fail_advance_after_finish() {
     let mut context = context::empty();
-    context.start_game(10);
+    context.start_game(100_000);
     context.die();
     context.advance_position();
     abort 0
@@ -106,7 +106,7 @@ public fun fail_advance_after_finish() {
 #[test, expected_failure(abort_code = context::EInvalidStateTransition)]
 public fun fail_win_after_finish() {
     let mut context = context::empty();
-    context.start_game(10);
+    context.start_game(100_000);
     context.die();
     context.process_win(100);
     abort 0
@@ -115,8 +115,8 @@ public fun fail_win_after_finish() {
 #[test, expected_failure(abort_code = context::EInvalidStateTransition)]
 public fun fail_start_after_advance() {
     let mut context = context::empty();
-    context.start_game(10);
+    context.start_game(100_000);
     context.advance_position();
-    context.start_game(10);
+    context.start_game(100_000);
     abort 0
 }

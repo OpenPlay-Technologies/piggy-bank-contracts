@@ -10,16 +10,15 @@ use piggy_bank::constants::{
     cash_out_action,
     game_finished_status,
     game_ongoing_status,
-    empty_position,
-    current_version
+    empty_position
 };
 use piggy_bank::context;
-use piggy_bank::game::{Self, new_interact, get_admin_cap_for_testing};
+use piggy_bank::game::{Self, new_interact};
 use piggy_bank::test_utils::{default_game, always_die_game, always_win_game};
+use std::unit_test::destroy;
 use std::uq32_32::{int_mul, from_quotient};
 use sui::random::Random;
 use sui::test_scenario::{begin, return_shared};
-use sui::test_utils::destroy;
 
 #[test]
 public fun success_instant_lose() {
@@ -39,18 +38,18 @@ public fun success_instant_lose() {
     // Internal interact
     let rand = scenario.take_shared<Random>();
     let mut rand_generator = rand.new_generator(scenario.ctx());
-    let mut interact = new_interact(start_game_action(), balance_manager.id(), 100);
+    let mut interact = new_interact(start_game_action(), balance_manager.id(), 100_000);
     game.interact_int(&param_store, &mut interact, &mut rand_generator);
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 100);
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_finished_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == empty_position());
 
     // Validate transactions
-    assert!(interact.transactions() == vector[bet(100)]);
+    assert!(interact.transactions() == vector[bet(100_000)]);
 
     destroy(game);
     destroy(param_store);
@@ -81,18 +80,18 @@ public fun success_start_win() {
     // Internal interact
     let rand = scenario.take_shared<Random>();
     let mut rand_generator = rand.new_generator(scenario.ctx());
-    let mut interact = new_interact(start_game_action(), balance_manager.id(), 100);
+    let mut interact = new_interact(start_game_action(), balance_manager.id(), 100_000);
     game.interact_int(&param_store, &mut interact, &mut rand_generator);
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 100);
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_ongoing_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == 0);
 
     // Validate transactions
-    assert!(interact.transactions() == vector[bet(100)]);
+    assert!(interact.transactions() == vector[bet(100_000)]);
 
     destroy(game);
     destroy(param_store);
@@ -121,7 +120,7 @@ public fun success_cash_out() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 0, 0, game_ongoing_status());
+    let context = context::create_for_testing(100_000, 0, 0, game_ongoing_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
@@ -132,8 +131,8 @@ public fun success_cash_out() {
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    let expected_win = int_mul(100, game.payout_factor(&param_store, 0));
-    assert!(context.stake() == 100);
+    let expected_win = int_mul(100_000, game.payout_factor(&param_store, 0));
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_finished_status());
     assert!(context.get_win() == expected_win);
     assert!(context.current_position() == 0);
@@ -168,22 +167,22 @@ public fun success_cash_out_invalid_pos() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 0, 99, game_ongoing_status());
+    let context = context::create_for_testing(100_000, 0, 2, game_ongoing_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
     let rand = scenario.take_shared<Random>();
     let mut rand_generator = rand.new_generator(scenario.ctx());
-    let mut interact = new_interact(cash_out_action(), balance_manager.id(), 0);
+    let mut interact = new_interact(cash_out_action(), balance_manager.id(), 100_000);
     game.interact_int(&param_store, &mut interact, &mut rand_generator);
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    let expected_win = 0;
-    assert!(context.stake() == 100);
+    let expected_win = 800_000;
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_finished_status());
     assert!(context.get_win() == expected_win);
-    assert!(context.current_position() == 99);
+    assert!(context.current_position() == 2);
 
     // Validate transactions
     assert!(interact.transactions() == vector[win(expected_win)]);
@@ -215,7 +214,7 @@ public fun success_advance_start_0() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 0, 0, game_ongoing_status());
+    let context = context::create_for_testing(100_000, 0, 0, game_ongoing_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
@@ -226,7 +225,7 @@ public fun success_advance_start_0() {
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 100);
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_ongoing_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == 1);
@@ -261,7 +260,7 @@ public fun success_advance_start_1() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 0, 1, game_ongoing_status());
+    let context = context::create_for_testing(100_000, 0, 1, game_ongoing_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
@@ -272,7 +271,7 @@ public fun success_advance_start_1() {
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 100);
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_ongoing_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == 2);
@@ -307,7 +306,7 @@ public fun success_win() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 0, 2, game_ongoing_status());
+    let context = context::create_for_testing(100_000, 0, 2, game_ongoing_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
@@ -318,8 +317,8 @@ public fun success_win() {
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    let expected_win = game.max_payout(&param_store, 100);
-    assert!(context.stake() == 100);
+    let expected_win = game.max_payout(&param_store, 100_000);
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_finished_status());
     assert!(context.get_win() == expected_win);
     assert!(context.current_position() == 3);
@@ -354,24 +353,24 @@ public fun success_new_game_after_win() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 100, 2, game_finished_status());
+    let context = context::create_for_testing(100_000, 100_000, 2, game_finished_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
     let rand = scenario.take_shared<Random>();
     let mut rand_generator = rand.new_generator(scenario.ctx());
-    let mut interact = new_interact(start_game_action(), balance_manager.id(), 200);
+    let mut interact = new_interact(start_game_action(), balance_manager.id(), 200_000);
     game.interact_int(&param_store, &mut interact, &mut rand_generator);
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 200);
+    assert!(context.stake() == 200_000);
     assert!(context.status() == game_ongoing_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == 0);
 
     // Validate transactions
-    assert!(interact.transactions() == vector[bet(200)]);
+    assert!(interact.transactions() == vector[bet(200_000)]);
 
     destroy(game);
     destroy(balance_manager);
@@ -400,24 +399,24 @@ public fun success_instant_loss_after_win() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 100, 2, game_finished_status());
+    let context = context::create_for_testing(100_000, 100_000, 2, game_finished_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
     let rand = scenario.take_shared<Random>();
     let mut rand_generator = rand.new_generator(scenario.ctx());
-    let mut interact = new_interact(start_game_action(), balance_manager.id(), 200);
+    let mut interact = new_interact(start_game_action(), balance_manager.id(), 200_000);
     game.interact_int(&param_store, &mut interact, &mut rand_generator);
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 200);
+    assert!(context.stake() == 200_000);
     assert!(context.status() == game_finished_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == empty_position());
 
     // Validate transactions
-    assert!(interact.transactions() == vector[bet(200)]);
+    assert!(interact.transactions() == vector[bet(200_000)]);
 
     destroy(game);
     destroy(balance_manager);
@@ -446,24 +445,24 @@ public fun success_new_game_after_loss() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 0, empty_position(), game_finished_status());
+    let context = context::create_for_testing(100_000, 0, empty_position(), game_finished_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
     let rand = scenario.take_shared<Random>();
     let mut rand_generator = rand.new_generator(scenario.ctx());
-    let mut interact = new_interact(start_game_action(), balance_manager.id(), 200);
+    let mut interact = new_interact(start_game_action(), balance_manager.id(), 200_000);
     game.interact_int(&param_store, &mut interact, &mut rand_generator);
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 200);
+    assert!(context.stake() == 200_000);
     assert!(context.status() == game_ongoing_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == 0);
 
     // Validate transactions
-    assert!(interact.transactions() == vector[bet(200)]);
+    assert!(interact.transactions() == vector[bet(200_000)]);
 
     destroy(game);
     destroy(balance_manager);
@@ -492,7 +491,7 @@ public fun success_advance_die() {
     let (balance_manager, balance_manager_cap) = balance_manager::new(scenario.ctx());
 
     // Fix context
-    let context = context::create_for_testing(100, 0, 0, game_ongoing_status());
+    let context = context::create_for_testing(100_000, 0, 0, game_ongoing_status());
     game.fix_context_for_testing(balance_manager.id(), context);
 
     // Internal interact
@@ -503,7 +502,7 @@ public fun success_advance_die() {
 
     // Validate context
     let context = game.get_context_ref(&balance_manager);
-    assert!(context.stake() == 100);
+    assert!(context.stake() == 100_000);
     assert!(context.status() == game_finished_status());
     assert!(context.get_win() == 0);
     assert!(context.current_position() == 0);
@@ -704,29 +703,4 @@ public fun correct_props() {
     destroy(admin_cap);
     destroy(house);
     scenario.end();
-}
-
-#[test, expected_failure(abort_code = game::EPackageVersionDisabled)]
-public fun version_check_ok() {
-    let addr = @0xa;
-    let mut scenario = begin(addr);
-    create_and_fix_random(x"1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1C");
-
-    // Create the game
-    let (mut game, _house, _admin_cap, param_store) = default_game(scenario.ctx());
-
-    // Disable the current version
-    let cap = get_admin_cap_for_testing(scenario.ctx());
-    game.admin_disallow_version(&cap, current_version());
-
-    // Interact
-    let rand = scenario.take_shared<Random>();
-    let mut generator = rand.new_generator(scenario.ctx());
-    game.interact_int(
-        &param_store,
-        &mut new_interact(cash_out_action(), object::id_from_address(@0xa), 0),
-        &mut generator,
-    );
-
-    abort 0
 }

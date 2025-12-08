@@ -88,6 +88,7 @@ print_steps_payout_table() {
 show_parameter_sets() {
     echo ""
     print_status "Available Piggy Bank Parameter Sets:"
+    print_status "Note: Append '_SHORT' to any set number (e.g. '1_SHORT') for a shorter version with lower stakes."
     echo ""
     for set_num in 1 2 3 4 5; do
         get_parameter_set "$set_num" >/dev/null 2>&1
@@ -183,7 +184,7 @@ get_parameter_set() {
 # Function to load core environment variables from openplay-core repo
 load_core_variables() {
     local env="$1"
-    local core_repo="https://raw.githubusercontent.com/OpenPlay-Technologies/openplay-core/v1.1"
+    local core_repo="https://raw.githubusercontent.com/OpenPlay-Technologies/openplay-core/v2.1"
     local core_env_file="outputs/$env/latest.env"
     local local_core_env="outputs/$env/core_latest.env"
     
@@ -314,7 +315,7 @@ if [ -z "$CURRENT_PIGGY_BANK_PACKAGE_ID" ] || [ -z "$PIGGY_BANK_CAP" ] || [ -z "
     exit 1
 fi
 
-# Set package variables for convenience (use CURRENT_* to always use latest version)
+# Set package variables for convenience (use CURRENT_* to always use latest package)
 CORE_PACKAGE_ID="$CURRENT_OPENPLAY_CORE_PACKAGE_ID"
 PIGGY_BANK_PACKAGE_ID="$CURRENT_PIGGY_BANK_PACKAGE_ID"
 REGISTRY_ID="$OPENPLAY_CORE_REGISTRY_ID"
@@ -327,7 +328,9 @@ if [ $# -eq 0 ]; then
     show_parameter_sets
     echo ""
     print_status "Usage: $0 <parameter_set_number> [--debug]"
+    print_status "       Append '_SHORT' to set number for short version (e.g. 1_SHORT)"
     print_status "Example: $0 2"
+    print_status "         $0 1_SHORT"
     print_status "         $0 2 --debug"
     exit 1
 fi

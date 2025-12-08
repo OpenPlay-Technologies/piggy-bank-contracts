@@ -5,7 +5,7 @@ use openplay_core::house::{Self, House, HouseAdminCap};
 use openplay_core::parameter_store::ParameterStore;
 use openplay_core::registry::registry_for_testing;
 use piggy_bank::game::{Self, Game, get_admin_cap_for_testing};
-use sui::test_utils::destroy;
+use std::unit_test::destroy;
 
 public fun default_game(ctx: &mut TxContext): (Game, House, HouseAdminCap, ParameterStore) {
     let cap = get_admin_cap_for_testing(ctx);

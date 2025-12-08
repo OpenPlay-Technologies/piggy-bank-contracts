@@ -6,9 +6,8 @@ use openplay_core::game_stats::GameStatistics;
 use openplay_core::house::House;
 use openplay_core::parameter_store::{Self, ParameterStore};
 use openplay_core::registry::Registry;
-use openplay_core::transaction::{Transaction, bet, win};
+use openplay_core::transaction::{Transaction, bet_checked, win_checked};
 use piggy_bank::constants::{
-    current_version,
     advance_action,
     cash_out_action,
     start_game_action,
@@ -24,14 +23,14 @@ use piggy_bank::constants::{
     success_rate_bps_param_name
 };
 use piggy_bank::context::{Self, PiggyBankContext};
-use std::option::none;
 use std::string::String;
 use std::uq32_32::{UQ32_32, from_quotient, int_mul};
+use sui::coin::Coin;
 use sui::event::emit;
 use sui::random::{Random, RandomGenerator};
+use sui::sui::SUI;
 use sui::table::{Self, Table};
 use sui::transfer::share_object;
-use sui::vec_set::{Self, VecSet};
 
 // === Errors ===
 const EInvalidSuccessRate: u64 = 1;
@@ -42,9 +41,6 @@ const EGameAlreadyOngoing: u64 = 4;
 const EGameNotInProgress: u64 = 5;
 const EUnsupportedAction: u64 = 6;
 const ECannotAdvanceFurther: u64 = 7;
-const EPackageVersionDisabled: u64 = 8;
-const EVersionAlreadyAllowed: u64 = 9;
-const EVersionAlreadyDisabled: u64 = 10;
 const EContextAlreadyExists: u64 = 11;
 const EInvalidParamStore: u64 = 12;
 
@@ -53,7 +49,6 @@ public struct GAME has drop {}
 
 public struct Game has key {
     id: UID,
-    allowed_versions: VecSet<u64>,
     contexts: Table<ID, PiggyBankContext>,
     param_store_id: ID,
 }
@@ -89,7 +84,6 @@ fun init(_: GAME, ctx: &mut TxContext) {
 
 // === Public-View Functions ===
 public fun id(self: &Game): ID {
-    self.assert_version();
     self.id.to_inner()
 }
 
@@ -98,7 +92,6 @@ public fun transactions(interaction: &Interaction): vector<Transaction> {
 }
 
 public fun get_context_ref(self: &mut Game, balance_manager: &BalanceManager): &PiggyBankContext {
-    self.assert_version();
     self.ensure_context(balance_manager.id());
     self.contexts.borrow(balance_manager.id())
 }
@@ -132,8 +125,6 @@ entry fun interact(
     random: &Random,
     ctx: &mut TxContext,
 ) {
-    self.assert_version();
-
     let house_tx_cap = house.borrow_tx_cap(&mut self.id);
 
     // Make sure we have enough funds in the house to play this game
@@ -157,7 +148,6 @@ entry fun interact(
         balance_manager,
         &interact.transactions(),
         play_cap,
-        none(),
         ctx,
     );
 
@@ -200,12 +190,8 @@ public fun admin_create(
     param_store.add(success_rate_bps_param_name(), success_rate_bps);
     param_store.add(steps_payout_bps_param_name(), steps_payout_bps);
 
-    let mut allowed_versions = vec_set::empty();
-    allowed_versions.insert(current_version());
-
     let game = Game {
         id: object::new(ctx),
-        allowed_versions: allowed_versions,
         param_store_id,
         contexts: table::new(ctx),
     };
@@ -214,16 +200,6 @@ public fun admin_create(
     let stats = registry.init_stats(&game.id, ctx);
 
     (game, param_store, stats)
-}
-
-public fun admin_allow_version(self: &mut Game, _cap: &PiggyBankCap, version: u64) {
-    assert!(!self.allowed_versions.contains(&version), EVersionAlreadyAllowed);
-    self.allowed_versions.insert(version);
-}
-
-public fun admin_disallow_version(self: &mut Game, _cap: &PiggyBankCap, version: u64) {
-    assert!(self.allowed_versions.contains(&version), EVersionAlreadyDisabled);
-    self.allowed_versions.remove(&version);
 }
 
 /// Gets the max payout of the game. This ensures that the vault has sufficient funds to accept the bet.
@@ -239,8 +215,6 @@ public(package) fun interact_int(
     interaction: &mut Interaction,
     rand: &mut RandomGenerator,
 ) {
-    self.assert_version();
-
     // Get context
     let mut context = self.take_context(interaction.balance_manager_id);
 
@@ -251,7 +225,7 @@ public(package) fun interact_int(
         // 1. Start Game
         InteractionType::START_GAME { stake } => {
             // Place bet and deduct stake
-            interaction.transactions.push_back(bet(stake));
+            interaction.transactions.push_back(bet_checked(stake));
             context.start_game(stake);
 
             self.advance_internal(param_store, &mut context, &mut interaction.transactions, rand);
@@ -365,11 +339,6 @@ fun ensure_context(self: &mut Game, balance_manager_id: ID) {
     };
 }
 
-fun assert_version(self: &Game) {
-    let package_version = current_version();
-    assert!(self.allowed_versions.contains(&package_version), EPackageVersionDisabled);
-}
-
 fun assert_param_store(self: &Game, param_store: &ParameterStore) {
     let param_store_id = self.param_store_id;
     assert!(param_store_id == param_store.id(), EInvalidParamStore);
@@ -406,7 +375,18 @@ fun win_internal(
     let payout_factor = self.payout_factor(param_store, context.current_position());
     let payout = int_mul(context.stake(), payout_factor);
     context.process_win(payout);
-    transactions.push_back(win(payout));
+    transactions.push_back(win_checked(payout));
+}
+
+// === Admin Functions ===
+public fun admin_claim_fees(
+    _cap: &PiggyBankCap,
+    self: &mut Game,
+    house: &mut House,
+    ctx: &mut TxContext,
+): Coin<SUI> {
+    let house_tx_cap = house.borrow_tx_cap(&mut self.id);
+    house.tx_admin_claim_game_fees(house_tx_cap, ctx)
 }
 
 // === Test Functions ===

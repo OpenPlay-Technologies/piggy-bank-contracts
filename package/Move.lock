@@ -2,60 +2,35 @@
 
 [move]
 version = 3
-manifest_digest = "215C430D863B15B28D0B8E0970FAA0A93FDCB3CD829F5048E847A64EA90CDD71"
-deps_digest = "397E6A9F7A624706DBDFEE056CE88391A15876868FD18A88504DA74EB458D697"
+manifest_digest = "146444ADBD7FED58DD2B584787B64E7874B755E684265B4B597F2E0F1F9BC51D"
+deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 dependencies = [
-  { id = "Bridge", name = "Bridge" },
-  { id = "MoveStdlib", name = "MoveStdlib" },
   { id = "Sui", name = "Sui" },
-  { id = "SuiSystem", name = "SuiSystem" },
   { id = "openplay_core", name = "openplay_core" },
 ]
 
 [[move.package]]
-id = "Bridge"
-source = { git = "https://github.com/MystenLabs/sui.git", rev = "494fa6ede17f366f1cd850f01ccb9f42dc75c470", subdir = "crates/sui-framework/packages/bridge" }
-
-dependencies = [
-  { id = "MoveStdlib", name = "MoveStdlib" },
-  { id = "Sui", name = "Sui" },
-  { id = "SuiSystem", name = "SuiSystem" },
-]
-
-[[move.package]]
 id = "MoveStdlib"
-source = { git = "https://github.com/MystenLabs/sui.git", rev = "494fa6ede17f366f1cd850f01ccb9f42dc75c470", subdir = "crates/sui-framework/packages/move-stdlib" }
+source = { git = "https://github.com/MystenLabs/sui.git", rev = "mainnet-v1.61.2", subdir = "crates/sui-framework/packages/move-stdlib" }
 
 [[move.package]]
 id = "Sui"
-source = { git = "https://github.com/MystenLabs/sui.git", rev = "494fa6ede17f366f1cd850f01ccb9f42dc75c470", subdir = "crates/sui-framework/packages/sui-framework" }
+source = { git = "https://github.com/MystenLabs/sui.git", rev = "mainnet-v1.61.2", subdir = "crates/sui-framework/packages/sui-framework" }
 
 dependencies = [
   { id = "MoveStdlib", name = "MoveStdlib" },
-]
-
-[[move.package]]
-id = "SuiSystem"
-source = { git = "https://github.com/MystenLabs/sui.git", rev = "494fa6ede17f366f1cd850f01ccb9f42dc75c470", subdir = "crates/sui-framework/packages/sui-system" }
-
-dependencies = [
-  { id = "MoveStdlib", name = "MoveStdlib" },
-  { id = "Sui", name = "Sui" },
 ]
 
 [[move.package]]
 id = "openplay_core"
-source = { git = "git@github.com:OpenPlay-Technologies/openplay-core.git", rev = "v1.1", subdir = "package" }
+source = { git = "git@github.com:OpenPlay-Technologies/openplay-core.git", rev = "v2.1", subdir = "package" }
 
 dependencies = [
-  { id = "Bridge", name = "Bridge" },
-  { id = "MoveStdlib", name = "MoveStdlib" },
   { id = "Sui", name = "Sui" },
-  { id = "SuiSystem", name = "SuiSystem" },
 ]
 
 [move.toolchain-version]
-compiler-version = "1.59.1"
+compiler-version = "1.61.2"
 edition = "2024.beta"
 flavor = "sui"
 
@@ -63,6 +38,6 @@ flavor = "sui"
 
 [env.testnet]
 chain-id = "4c78adac"
-original-published-id = "0x3da98be2c33d351cf9b9ad936a796d556d6027c267d31766a9a5c01ea348444c"
-latest-published-id = "0x3da98be2c33d351cf9b9ad936a796d556d6027c267d31766a9a5c01ea348444c"
+original-published-id = "0x73536aeee2edb587addbc993795fae5bb65c0f5c0a21049db1a5e8235a562a02"
+latest-published-id = "0x73536aeee2edb587addbc993795fae5bb65c0f5c0a21049db1a5e8235a562a02"
 published-version = "1"

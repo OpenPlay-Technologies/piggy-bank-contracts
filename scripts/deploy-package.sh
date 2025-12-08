@@ -97,7 +97,8 @@ save_deployment_output() {
         "ORIGINAL_PIGGY_BANK_PACKAGE_ID" \
         "PIGGY_BANK_CAP" \
         "PIGGY_BANK_UPGRADE_CAP" \
-        "PIGGY_BANK_VERSION"
+        "PIGGY_BANK_VERSION" \
+        "IMMUTABLE_TX_DIGEST"
     
     # Create latest symlink for easy access
     local latest_env="$output_dir/latest_piggy_bank.env"
@@ -227,6 +228,26 @@ if [ -z "$PIGGY_BANK_UPGRADE_CAP" ] || [ "$PIGGY_BANK_UPGRADE_CAP" = "null" ]; t
     exit 1
 fi
 
+# Make package immutable by destroying the upgrade capability
+print_status "Making package immutable by destroying upgrade capability..."
+IMMUTABLE_OUTPUT=$(sui client call \
+    --package 0x2 \
+    --module 'package' \
+    --function 'make_immutable' \
+    --args "$PIGGY_BANK_UPGRADE_CAP" \
+    --json 2>&1)
+
+# Check if the make_immutable call was successful
+if echo "$IMMUTABLE_OUTPUT" | jq -e '.effects.status.status == "success"' > /dev/null 2>&1; then
+    print_success "Package is now immutable - upgrade capability destroyed!"
+    # Extract transaction digest
+    IMMUTABLE_TX_DIGEST=$(echo "$IMMUTABLE_OUTPUT" | jq -r '.digest')
+else
+    print_error "Failed to make package immutable!"
+    echo "$IMMUTABLE_OUTPUT" | jq '.effects.status' 2>/dev/null || echo "$IMMUTABLE_OUTPUT"
+    exit 1
+fi
+
 # Get version number (this is a new deployment, so version 1)
 PIGGY_BANK_VERSION=1
 
@@ -240,6 +261,7 @@ export ORIGINAL_PIGGY_BANK_PACKAGE_ID
 export PIGGY_BANK_VERSION
 export PIGGY_BANK_CAP
 export PIGGY_BANK_UPGRADE_CAP
+export IMMUTABLE_TX_DIGEST
 
 # Return to root directory
 cd ..
@@ -259,6 +281,7 @@ echo "  Version: $PIGGY_BANK_VERSION"
 echo "  Current Package ID: $CURRENT_PIGGY_BANK_PACKAGE_ID"
 echo "  Original Package ID: $ORIGINAL_PIGGY_BANK_PACKAGE_ID"
 echo "  Cap: $PIGGY_BANK_CAP"
-echo "  Upgrade Cap: $PIGGY_BANK_UPGRADE_CAP"
+echo "  Upgrade Cap: $PIGGY_BANK_UPGRADE_CAP (Destroyed - package is now immutable)"
+echo "  Immutable Tx: $IMMUTABLE_TX_DIGEST"
 echo ""
 print_status "Environment variables are now available in your current shell session."
