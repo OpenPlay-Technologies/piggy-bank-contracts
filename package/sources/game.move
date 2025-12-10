@@ -25,10 +25,8 @@ use piggy_bank::constants::{
 use piggy_bank::context::{Self, PiggyBankContext};
 use std::string::String;
 use std::uq32_32::{UQ32_32, from_quotient, int_mul};
-use sui::coin::Coin;
 use sui::event::emit;
 use sui::random::{Random, RandomGenerator};
-use sui::sui::SUI;
 use sui::table::{Self, Table};
 use sui::transfer::share_object;
 
@@ -128,7 +126,7 @@ entry fun interact(
     let house_tx_cap = house.borrow_tx_cap(&mut self.id);
 
     // Make sure we have enough funds in the house to play this game
-    house.ensure_sufficient_funds(self.max_payout(param_store, stake), ctx);
+    house.ensure_sufficient_funds(registry, self.max_payout(param_store, stake), ctx);
 
     // Interact with coin flip game and record any transactions made
     let mut interact = new_interact(
@@ -376,17 +374,6 @@ fun win_internal(
     let payout = int_mul(context.stake(), payout_factor);
     context.process_win(payout);
     transactions.push_back(win_checked(payout));
-}
-
-// === Admin Functions ===
-public fun admin_claim_fees(
-    _cap: &PiggyBankCap,
-    self: &mut Game,
-    house: &mut House,
-    ctx: &mut TxContext,
-): Coin<SUI> {
-    let house_tx_cap = house.borrow_tx_cap(&mut self.id);
-    house.tx_admin_claim_game_fees(house_tx_cap, ctx)
 }
 
 // === Test Functions ===

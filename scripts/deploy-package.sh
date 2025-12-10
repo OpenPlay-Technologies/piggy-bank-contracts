@@ -235,7 +235,7 @@ IMMUTABLE_OUTPUT=$(sui client call \
     --module 'package' \
     --function 'make_immutable' \
     --args "$PIGGY_BANK_UPGRADE_CAP" \
-    --json 2>&1)
+    --json)
 
 # Check if the make_immutable call was successful
 if echo "$IMMUTABLE_OUTPUT" | jq -e '.effects.status.status == "success"' > /dev/null 2>&1; then
@@ -244,6 +244,7 @@ if echo "$IMMUTABLE_OUTPUT" | jq -e '.effects.status.status == "success"' > /dev
     IMMUTABLE_TX_DIGEST=$(echo "$IMMUTABLE_OUTPUT" | jq -r '.digest')
 else
     print_error "Failed to make package immutable!"
+    echo "Raw output: $IMMUTABLE_OUTPUT"
     echo "$IMMUTABLE_OUTPUT" | jq '.effects.status' 2>/dev/null || echo "$IMMUTABLE_OUTPUT"
     exit 1
 fi

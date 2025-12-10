@@ -20,7 +20,7 @@ public fun default_game(ctx: &mut TxContext): (Game, House, HouseAdminCap, Param
         ctx,
     );
 
-    let (house, house_admin_cap) = house::new_for_testing(false, 10_000_000, 50, ctx);
+    let (house, house_admin_cap) = house::new_for_testing(false, 50, 50, 50, ctx);
 
     destroy(cap);
     destroy(registry);
@@ -42,7 +42,7 @@ public fun always_die_game(ctx: &mut TxContext): (Game, House, HouseAdminCap, Pa
         ctx,
     );
 
-    let (house, house_admin_cap) = house::new_for_testing(false, 10_000_000, 50, ctx);
+    let (house, house_admin_cap) = house::new_for_testing(false, 50, 50, 50, ctx);
 
     destroy(cap);
     destroy(registry);
@@ -65,7 +65,7 @@ public fun always_win_game(ctx: &mut TxContext): (Game, House, HouseAdminCap, Pa
         ctx,
     );
 
-    let (house, house_admin_cap) = house::new_for_testing(false, 10_000_000, 50, ctx);
+    let (house, house_admin_cap) = house::new_for_testing(false, 50, 50, 50, ctx);
 
     destroy(cap);
     destroy(registry);

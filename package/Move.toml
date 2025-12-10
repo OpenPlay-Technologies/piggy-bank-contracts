@@ -1,10 +1,10 @@
 [package]
 name = "piggy_bank"
 edition = "2024.beta"
-version = "2"
+version = "3"
 
 [dependencies]
-openplay_core= { git = "git@github.com:OpenPlay-Technologies/openplay-core.git", subdir = "package", rev = "v2.1" }
+openplay_core= { git = "git@github.com:OpenPlay-Technologies/openplay-core.git", subdir = "package", rev = "v3.1" }
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet-v1.61.2" }
 
 [addresses]
