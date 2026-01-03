@@ -34,13 +34,13 @@ use sui::transfer::share_object;
 const EInvalidSuccessRate: u64 = 1;
 const EInvalidSteps: u64 = 2;
 const EUnsupportedStake: u64 = 3;
-const EInvalidCashOut: u64 = 3;
 const EGameAlreadyOngoing: u64 = 4;
 const EGameNotInProgress: u64 = 5;
 const EUnsupportedAction: u64 = 6;
 const ECannotAdvanceFurther: u64 = 7;
 const EContextAlreadyExists: u64 = 11;
 const EInvalidParamStore: u64 = 12;
+const EInvalidCashOut: u64 = 13;
 
 // === Structs ===
 public struct GAME has drop {}
@@ -125,7 +125,10 @@ entry fun interact(
 ) {
     let house_tx_cap = house.borrow_tx_cap(&mut self.id);
 
-    // Make sure we have enough funds in the house to play this game
+    // Make sure we have enough funds in the house to play this game.
+    // Note: This check is only meaningful for START_GAME (where stake is the actual bet).
+    // For ADVANCE/CASH_OUT, house funds were already verified at game start, so this check
+    // passes trivially (stake=0 → max_payout=0). The house reserves funds at game start.
     house.ensure_sufficient_funds(registry, self.max_payout(param_store, stake), ctx);
 
     // Interact with coin flip game and record any transactions made

@@ -11,6 +11,7 @@ use std::string::String;
 
 // === Errors ===
 const EInvalidStateTransition: u64 = 1;
+const EPositionOverflow: u64 = 2;
 
 // === Structs ===
 public struct PiggyBankContext has copy, drop, store {
@@ -72,6 +73,7 @@ public(package) fun advance_position(self: &mut PiggyBankContext) {
     } else {
         // Move to next position
         assert!(self.status() == game_ongoing_status(), EInvalidStateTransition);
+        assert!(self.current_position < 254, EPositionOverflow);
         self.current_position = self.current_position + 1;
     }
 }
