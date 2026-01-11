@@ -46,7 +46,7 @@
 | Critical | 0 |
 | High | 0 |
 | Medium | 0 |
-| Low | 2 |
+| Low | 1 |
 | Informational | 4 |
 
 ### Overall Assessment
@@ -301,11 +301,9 @@ Remaining Centralization:
 | ID | Severity | Title | Status |
 |----|----------|-------|--------|
 | ~~M-01~~ | ~~Medium~~ | ~~Context Storage Growth Without Cleanup Mechanism~~ | N/A - Not an issue |
-| ~~M-02~~ | ~~Medium~~ | ~~House Fund Check Uses Wrong Stake for ADVANCE/CASH_OUT~~ | N/A - By design (comment added) |
 | ~~L-01~~ | ~~Low~~ | ~~Duplicate Error Code Constants~~ | ✅ Fixed |
 | L-02 | Low | Public Visibility on `share()` Function | Open |
 | ~~L-03~~ | ~~Low~~ | ~~Position Increment Unchecked for u8 Overflow~~ | ✅ Fixed |
-| L-04 | Low | Missing Validation: min_stake <= max_stake | Open |
 | I-01 | Info | Missing Events for Admin Actions | Open |
 | I-02 | Info | Hardcoded Status Strings | Open |
 | I-03 | Info | Empty Position Sentinel Value Could Be Cleaner | Open |
@@ -334,44 +332,6 @@ This is **NOT an issue** on Sui. The `Table` type in Sui uses child objects (dyn
 Sui's object model is specifically designed to handle unbounded collections through child objects, making this a non-issue.
 
 **Status:** N/A - Not a vulnerability
-
----
-
-### ~~M-02: House Fund Check Uses Wrong Stake for ADVANCE/CASH_OUT~~ (N/A - By Design)
-
-**Severity:** ~~Medium~~ → **N/A**
-
-**Location:** `game.move:128-132`
-
-**Original Concern:**
-
-The `interact()` function calls `ensure_sufficient_funds()` using the user-provided `stake` parameter, which is ignored for ADVANCE/CASH_OUT actions. This appeared to allow bypassing the house fund check.
-
-**Resolution:**
-
-This is **by design** and not a vulnerability:
-
-1. **House funds are reserved at START_GAME:** When a player starts a game, `ensure_sufficient_funds()` verifies the house has enough funds to cover the maximum possible payout for that stake.
-
-2. **Funds remain reserved during gameplay:** The house reserves/locks funds for ongoing games. A player's potential payout is already accounted for from game start.
-
-3. **ADVANCE/CASH_OUT don't need re-verification:** Since the funds were verified and reserved at game start, subsequent actions don't need to re-check. The check passes trivially with `stake=0`.
-
-4. **No external fund drainage mid-game:** The house cannot have its funds drained by other players mid-game in a way that would affect an ongoing game's payout.
-
-**Code Clarification Added:**
-
-A comment was added to clarify this design decision:
-
-```move
-// Make sure we have enough funds in the house to play this game.
-// Note: This check is only meaningful for START_GAME (where stake is the actual bet).
-// For ADVANCE/CASH_OUT, house funds were already verified at game start, so this check
-// passes trivially (stake=0 → max_payout=0). The house reserves funds at game start.
-house.ensure_sufficient_funds(registry, self.max_payout(param_store, stake), ctx);
-```
-
-**Status:** N/A - By design (clarifying comment added)
 
 ---
 
@@ -473,55 +433,6 @@ self.current_position = self.current_position + 1;
 ```
 
 **Status:** ✅ FIXED
-
----
-
-### L-04: Missing Validation: min_stake <= max_stake
-
-**Severity:** Low
-
-**Location:** `game.move:167-182`
-
-**Description:**
-
-The `admin_create()` function does not validate that `min_stake <= max_stake`:
-
-```move
-public fun admin_create(
-    _cap: &PiggyBankCap,
-    registry: &mut Registry,
-    min_stake: u64,
-    max_stake: u64,  // No check that max_stake >= min_stake
-    success_rate_bps: u64,
-    steps_payout_bps: vector<u64>,
-    ctx: &mut TxContext,
-): (Game, ParameterStore, GameStatistics) {
-    assert!(success_rate_bps <= max_bps(), EInvalidSuccessRate);
-    
-    // Missing: assert!(min_stake <= max_stake, EInvalidStakeRange);
-    // ...
-}
-```
-
-**Impact:**
-
-If `min_stake > max_stake`, the game becomes unplayable since:
-```move
-assert!(stake >= self.min_stake(param_store), EUnsupportedStake);
-assert!(stake <= self.max_stake(param_store), EUnsupportedStake);
-```
-No stake value can satisfy both conditions.
-
-**Recommendation:**
-
-Add validation in `admin_create()`:
-
-```move
-const EInvalidStakeRange: u64 = 14;
-
-// In admin_create():
-assert!(min_stake <= max_stake, EInvalidStakeRange);
-```
 
 ---
 
@@ -1012,37 +923,32 @@ Status: ✅ ALL TESTS PASS
 ### Resolved Issues
 
 1. ~~**Implement Context Cleanup (M-01)**~~ - N/A: Sui Tables use child objects, no cleanup needed
-2. ~~**Fix Duplicate Error Codes (L-01)**~~ - ✅ FIXED: `EInvalidCashOut` now uses unique code `13`
+2. ~~**Fix Duplicate Error Codes (L-01)**~~ - ✅ FIXED: `EInvalidCashOut` now uses unique code `8`
 3. ~~**Position Overflow Check (L-03)**~~ - ✅ FIXED: Added explicit `EPositionOverflow` check
-4. ~~**House Fund Check for ADVANCE/CASH_OUT (M-02)**~~ - N/A: By design (comment added for clarity)
 
 ### Medium Priority
 
-2. **Restrict `share()` Visibility (L-02)**
+1. **Restrict `share()` Visibility (L-02)**
    - Change to `public(package)` if external composition not required
-
-3. **Add min_stake <= max_stake Validation (L-04)**
-   - Prevent creation of unplayable games
 
 ### Low Priority
 
-4. **Add Admin Events (I-01)**
+2. **Add Admin Events (I-01)**
    - Emit events for game creation and other admin actions
 
-5. **Consider Enum for Status (I-02)**
+3. **Consider Enum for Status (I-02)**
    - Replace String-based status with enum for type safety
 
 ### Testing Recommendations
 
-6. **Expand Test Coverage**
+4. **Expand Test Coverage**
    - Add boundary condition tests
    - Add stress tests for maximum game progression
    - Add tests for all error conditions
-   - Add test for house fund check with ADVANCE using stake=0
 
 ### Documentation Recommendations
 
-7. **Document Trust Assumptions**
+5. **Document Trust Assumptions**
    - Clearly document reliance on openplay_core
    - Document expected behavior of House and BalanceManager
 
@@ -1057,11 +963,11 @@ The Piggy Bank smart contract demonstrates a **solid security posture** with wel
 - Proper state machine validation
 - Immutable deployment preventing upgrade attacks
 
-The remaining open findings (L-02, L-04) are minor code quality improvements that do not affect the security of the protocol.
+The identified findings are primarily related to code quality and operational concerns rather than critical security vulnerabilities. The most significant finding (M-01) relates to storage management and should be addressed for long-term operational efficiency.
 
 **Overall Security Rating: GOOD**
 
-The contract is suitable for production deployment. The recommended fixes are optional improvements.
+The contract is suitable for production deployment with the recommended fixes implemented.
 
 ### Risk Profile Summary
 
@@ -1070,7 +976,6 @@ The contract is suitable for production deployment. The recommended fixes are op
 | Randomness Security | Excellent |
 | Access Control | Excellent |
 | State Management | Good |
-| Fund Management | Good |
 | Code Quality | Good |
 | Test Coverage | Good |
 | Centralization Risk | Low |

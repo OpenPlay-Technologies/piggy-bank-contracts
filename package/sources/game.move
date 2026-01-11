@@ -125,10 +125,7 @@ entry fun interact(
 ) {
     let house_tx_cap = house.borrow_tx_cap(&mut self.id);
 
-    // Make sure we have enough funds in the house to play this game.
-    // Note: This check is only meaningful for START_GAME (where stake is the actual bet).
-    // For ADVANCE/CASH_OUT, house funds were already verified at game start, so this check
-    // passes trivially (stake=0 → max_payout=0). The house reserves funds at game start.
+    // Make sure we have enough funds in the house to play this game
     house.ensure_sufficient_funds(registry, self.max_payout(param_store, stake), ctx);
 
     // Interact with coin flip game and record any transactions made
